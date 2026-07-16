@@ -171,7 +171,7 @@ export function SettingsPage() {
       </section>
 
       <p className="pb-2 text-center text-xs text-slate-300">
-        PoolLedger v0.1 · local-first, your data never leaves this device
+        ClearWater v0.1 · local-first, your data never leaves this device
       </p>
     </div>
   )

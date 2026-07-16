@@ -202,7 +202,7 @@ export function LedgerPage() {
         <EmptyState
           icon={<LedgerIcon className="h-7 w-7" />}
           title="No purchases logged"
-          message="Track what you spend at the pool store and PoolLedger will show you exactly where the money goes."
+          message="Track what you spend at the pool store and ClearWater will show you exactly where the money goes."
         />
       ) : (
         <section>

@@ -14,7 +14,7 @@ import type {
  * the repository implementations in ./repositories.ts — UI code never touches
  * Dexie directly, so a Supabase-backed repository set can be swapped in later.
  */
-class PoolLedgerDB extends Dexie {
+class ClearWaterDB extends Dexie {
   pools!: EntityTable<Pool, 'id'>
   readings!: EntityTable<Reading, 'id'>
   inventory_items!: EntityTable<InventoryItem, 'id'>
@@ -24,7 +24,7 @@ class PoolLedgerDB extends Dexie {
   checklist_items!: EntityTable<ChecklistItem, 'id'>
 
   constructor() {
-    super('poolledger')
+    super('clearwater')
     this.version(1).stores({
       pools: 'id, user_id',
       readings: 'id, pool_id, date, [pool_id+date]',
@@ -37,4 +37,4 @@ class PoolLedgerDB extends Dexie {
   }
 }
 
-export const db = new PoolLedgerDB()
+export const db = new ClearWaterDB()

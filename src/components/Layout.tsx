@@ -48,7 +48,7 @@ export function Layout() {
             </span>
             <div className="leading-tight">
               <h1 className="text-base font-bold text-slate-900">
-                {TITLES[pathname] ?? 'PoolLedger'}
+                {TITLES[pathname] ?? 'ClearWater'}
               </h1>
               {pool && (
                 <p className="text-xs text-slate-500">

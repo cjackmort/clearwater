@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'PoolLedger',
-        short_name: 'PoolLedger',
+        name: 'ClearWater',
+        short_name: 'ClearWater',
         description:
           'Turn water test reports into smart shopping lists and track every dollar spent on your pool.',
         theme_color: '#0891b2',

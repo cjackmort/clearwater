@@ -5,7 +5,7 @@ import { create } from 'zustand'
  * reactively with useLiveQuery; the store only tracks which pool is active.
  */
 
-const ACTIVE_POOL_KEY = 'poolledger.activePoolId'
+const ACTIVE_POOL_KEY = 'clearwater.activePoolId'
 
 interface AppState {
   activePoolId: string | null

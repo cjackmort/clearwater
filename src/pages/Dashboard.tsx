@@ -52,7 +52,7 @@ export function Dashboard() {
       <EmptyState
         icon={<DropletIcon className="h-7 w-7" />}
         title="No readings yet"
-        message="Log your first water test and PoolLedger will score your water, build a dosing plan, and start your weekly checklist."
+        message="Log your first water test and ClearWater will score your water, build a dosing plan, and start your weekly checklist."
         action={
           <Link to="/reading/new" className="btn-primary">
             <PlusIcon className="h-4 w-4" /> Log first reading

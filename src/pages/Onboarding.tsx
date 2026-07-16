@@ -80,7 +80,7 @@ export function Onboarding() {
         <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-600 text-white shadow-lg shadow-cyan-600/25">
           <DropletIcon className="h-8 w-8" />
         </span>
-        <h1 className="text-2xl font-bold text-slate-900">Welcome to PoolLedger</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Welcome to ClearWater</h1>
         <p className="mt-1 max-w-xs text-sm text-slate-500">
           Set up your pool profile and we'll turn every water test into a plan.
         </p>

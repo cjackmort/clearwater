@@ -1,4 +1,4 @@
-# PoolLedger
+# ClearWater
 
 A mobile-first PWA that turns pool water test reports into smart shopping lists — and tracks every dollar spent on your pool.
 
