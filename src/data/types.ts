@@ -6,6 +6,7 @@
 
 export type PoolType = 'chlorine' | 'saltwater'
 export type PoolSurface = 'plaster' | 'vinyl' | 'fiberglass'
+export type VesselKind = 'pool' | 'hot_tub'
 
 export interface Pool {
   id: string
@@ -14,6 +15,7 @@ export interface Pool {
   gallons: number
   type: PoolType
   surface: PoolSurface
+  vessel: VesselKind
   created_at: string
 }
 
@@ -39,6 +41,9 @@ export interface Reading {
   phosphates: number
   /** Only meaningful for saltwater pools */
   salt?: number
+  /** Reported on some store test reports; not part of the health score yet */
+  iron?: number
+  copper?: number
   health_score: number
   photo_url?: string
   recommended_products: RecommendedProduct[]

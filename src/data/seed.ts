@@ -36,6 +36,13 @@ interface WeekValues {
   phosphates: number
 }
 
+// Hot tub demo readings — index 0 is the oldest (14 days ago), last is today.
+const HOT_TUB_WEEKS: WeekValues[] = [
+  { fc: 4.2, tc: 4.4, ph: 7.5, ta: 90, ch: 220, cya: 35, phosphates: 60 },
+  { fc: 2.8, tc: 3.1, ph: 7.6, ta: 95, ch: 225, cya: 35, phosphates: 90 },
+  { fc: 1.8, tc: 2.0, ph: 7.7, ta: 100, ch: 230, cya: 36, phosphates: 110 },
+]
+
 // Index 0 is the oldest week; the last entry is the most recent reading.
 const WEEKS: WeekValues[] = [
   { fc: 3.2, tc: 3.3, ph: 7.5, ta: 100, ch: 280, cya: 40, phosphates: 50 },
@@ -141,9 +148,33 @@ export async function loadDemoData(): Promise<string> {
     gallons: 15000,
     type: 'chlorine',
     surface: 'plaster',
+    vessel: 'pool',
     created_at: daysAgo(60),
   }
   await repos.pools.create(pool)
+
+  const hotTub: Pool = {
+    id: newId(),
+    user_id: LOCAL_USER_ID,
+    name: 'Spa',
+    gallons: 450,
+    type: 'chlorine',
+    surface: 'fiberglass',
+    vessel: 'hot_tub',
+    created_at: daysAgo(30),
+  }
+  await repos.pools.create(hotTub)
+
+  const hotTubReadings: Reading[] = HOT_TUB_WEEKS.map((week, i) => ({
+    id: newId(),
+    user_id: LOCAL_USER_ID,
+    pool_id: hotTub.id,
+    date: daysAgo((HOT_TUB_WEEKS.length - 1 - i) * 7),
+    ...week,
+    health_score: computeHealthScore(week, hotTub.type),
+    recommended_products: [],
+  }))
+  for (const reading of hotTubReadings) await repos.readings.create(reading)
 
   const readings: Reading[] = WEEKS.map((week, i) => ({
     id: newId(),

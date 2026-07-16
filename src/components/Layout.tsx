@@ -52,7 +52,8 @@ export function Layout() {
               </h1>
               {pool && (
                 <p className="text-xs text-slate-500">
-                  {pool.name} · {pool.gallons.toLocaleString()} gal
+                  {pool.name} · {pool.vessel === 'hot_tub' ? 'Hot tub · ' : ''}
+                  {pool.gallons.toLocaleString()} gal
                 </p>
               )}
             </div>

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { repos } from '../data/repositories'
-import { LOCAL_USER_ID, newId, type PoolSurface, type PoolType } from '../data/types'
+import { LOCAL_USER_ID, newId, type PoolSurface, type PoolType, type VesselKind } from '../data/types'
 import { useAppStore } from '../store/useAppStore'
 import { DropletIcon } from '../components/Icons'
 import { loadDemoData } from '../data/seed'
@@ -26,11 +27,19 @@ const SEGMENT =
 const SEGMENT_ON = 'bg-white text-cyan-700 shadow-sm'
 const SEGMENT_OFF = 'text-slate-500 hover:text-slate-700'
 
+const VESSELS: Array<{ value: VesselKind; label: string }> = [
+  { value: 'pool', label: 'Pool' },
+  { value: 'hot_tub', label: 'Hot tub' },
+]
+
 export function Onboarding() {
   const navigate = useNavigate()
   const setActivePool = useAppStore((s) => s.setActivePool)
+  const existingPools = useLiveQuery(() => repos.pools.all(), [])
+  const hasPools = (existingPools?.length ?? 0) > 0
 
   const [name, setName] = useState('')
+  const [vessel, setVessel] = useState<VesselKind>('pool')
   const [type, setType] = useState<PoolType>('chlorine')
   const [surface, setSurface] = useState<PoolSurface>('plaster')
   const [mode, setMode] = useState<'direct' | 'calculator'>('direct')
@@ -60,6 +69,7 @@ export function Onboarding() {
       gallons,
       type,
       surface,
+      vessel,
       created_at: new Date().toISOString(),
     })
     setActivePool(id)
@@ -76,13 +86,23 @@ export function Onboarding() {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-slate-50 px-4 py-8 sm:border-x sm:border-slate-200/80 sm:shadow-xl sm:shadow-slate-300/40">
+      {hasPools && (
+        <Link
+          to="/settings"
+          className="mb-4 self-start text-sm font-medium text-cyan-700 underline-offset-4 hover:underline"
+        >
+          &larr; Back
+        </Link>
+      )}
       <div className="mb-8 flex flex-col items-center text-center">
         <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-600 text-white shadow-lg shadow-cyan-600/25">
           <DropletIcon className="h-8 w-8" />
         </span>
         <h1 className="text-2xl font-bold text-slate-900">Welcome to ClearWater</h1>
         <p className="mt-1 max-w-xs text-sm text-slate-500">
-          Set up your pool profile and we'll turn every water test into a plan.
+          {vessel === 'hot_tub'
+            ? "Set up your pool or hot tub and we'll turn every water test into a plan."
+            : "Set up your pool profile and we'll turn every water test into a plan."}
         </p>
       </div>
 
@@ -96,6 +116,18 @@ export function Onboarding() {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+        </div>
+
+        <div>
+          <span className="label-base">Vessel</span>
+          <div className="flex gap-1 rounded-xl bg-slate-100 p-1">
+            {VESSELS.map((v) => (
+              <button key={v.value} type="button" onClick={() => setVessel(v.value)}
+                className={`${SEGMENT} ${vessel === v.value ? SEGMENT_ON : SEGMENT_OFF}`}>
+                {v.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div>
@@ -140,7 +172,7 @@ export function Onboarding() {
               className="input-base"
               type="number"
               inputMode="numeric"
-              placeholder="e.g. 15000"
+              placeholder={vessel === 'hot_tub' ? 'e.g. 400' : 'e.g. 15000'}
               value={gallonsDirect}
               onChange={(e) => setGallonsDirect(e.target.value)}
             />

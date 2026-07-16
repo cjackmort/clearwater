@@ -86,7 +86,7 @@ export function SettingsPage() {
           />
         </div>
         <p className="text-xs text-slate-400 capitalize">
-          {pool.type} · {pool.surface}
+          {pool.vessel === 'hot_tub' ? 'hot tub' : 'pool'} · {pool.type} · {pool.surface}
         </p>
         {dirty && (
           <button className="btn-primary" onClick={() => void savePool()}>
@@ -110,12 +110,19 @@ export function SettingsPage() {
                   onClick={() => setActivePool(p.id)}
                 >
                   {p.name} · {p.gallons.toLocaleString()} gal
+                  {p.vessel === 'hot_tub' ? ' · Hot tub' : ''}
                 </button>
               </li>
             ))}
           </ul>
         </section>
       )}
+
+      <section className="card">
+        <button className="btn-secondary w-full" onClick={() => navigate('/onboarding')}>
+          Add a pool or hot tub
+        </button>
+      </section>
 
       <section className="card space-y-3">
         <h2 className="text-sm font-semibold text-slate-900">Demo & data</h2>

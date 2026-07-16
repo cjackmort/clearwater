@@ -58,12 +58,19 @@ export interface ChecklistRepository {
   setStatus(id: string, status: ChecklistStatus): Promise<void>
 }
 
+/** Rows written before hot tub support lack `vessel`; default them to 'pool'. */
+function normalizePool(pool: Pool): Pool {
+  return { ...pool, vessel: pool.vessel ?? 'pool' }
+}
+
 class DexiePoolRepository implements PoolRepository {
-  all() {
-    return db.pools.toArray()
+  async all() {
+    const pools = await db.pools.toArray()
+    return pools.map(normalizePool)
   }
-  get(id: string) {
-    return db.pools.get(id)
+  async get(id: string) {
+    const pool = await db.pools.get(id)
+    return pool ? normalizePool(pool) : undefined
   }
   async create(pool: Pool) {
     await db.pools.add(pool)
