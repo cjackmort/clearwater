@@ -3,7 +3,9 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // Served from https://<user>.github.io/clearwater/ in production
+  base: mode === 'production' ? '/clearwater/' : '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -13,12 +15,13 @@ export default defineConfig({
       manifest: {
         name: 'ClearWater',
         short_name: 'ClearWater',
+        scope: mode === 'production' ? '/clearwater/' : '/',
         description:
           'Turn water test reports into smart shopping lists and track every dollar spent on your pool.',
         theme_color: '#0891b2',
         background_color: '#f8fafc',
         display: 'standalone',
-        start_url: '/',
+        start_url: mode === 'production' ? '/clearwater/' : '/',
         icons: [
           {
             src: 'icon.svg',
@@ -30,4 +33,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+}))
