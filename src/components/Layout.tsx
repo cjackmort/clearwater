@@ -39,7 +39,7 @@ export function Layout() {
   )
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col">
+    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-slate-50 sm:border-x sm:border-slate-200/80 sm:shadow-xl sm:shadow-slate-300/40">
       <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-slate-50/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur">
         <div className="flex h-14 items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -73,20 +73,20 @@ export function Layout() {
         <Outlet />
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-stretch justify-around">
+      <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-20">
+        <div className="pointer-events-auto mx-auto flex max-w-lg items-stretch justify-around border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:border-x sm:border-slate-200/80">
           {TABS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition ${
+                `flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition ${
                   isActive ? 'text-cyan-600' : 'text-slate-400 hover:text-slate-600'
                 }`
               }
             >
-              <Icon className="h-5.5 w-5.5" />
+              <Icon className="h-5 w-5" />
               {label}
             </NavLink>
           ))}

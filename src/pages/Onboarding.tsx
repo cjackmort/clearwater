@@ -75,7 +75,7 @@ export function Onboarding() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-4 py-8">
+    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-slate-50 px-4 py-8 sm:border-x sm:border-slate-200/80 sm:shadow-xl sm:shadow-slate-300/40">
       <div className="mb-8 flex flex-col items-center text-center">
         <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-600 text-white shadow-lg shadow-cyan-600/25">
           <DropletIcon className="h-8 w-8" />

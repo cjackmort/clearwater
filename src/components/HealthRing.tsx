@@ -7,8 +7,8 @@ interface HealthRingProps {
 }
 
 /** Color ring: red <60, yellow 60–84, green 85+. */
-export function HealthRing({ score, size = 148, label = 'Health Score' }: HealthRingProps) {
-  const stroke = size / 12
+export function HealthRing({ score, size = 128, label = 'Health Score' }: HealthRingProps) {
+  const stroke = size / 13
   const radius = (size - stroke) / 2
   const circumference = 2 * Math.PI * radius
   const clamped = Math.max(0, Math.min(100, score))
@@ -39,10 +39,16 @@ export function HealthRing({ score, size = 148, label = 'Health Score' }: Health
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl font-bold tabular-nums" style={{ color }}>
+        <span
+          className="font-bold tabular-nums"
+          style={{ color, fontSize: size * 0.26, lineHeight: 1.1 }}
+        >
           {clamped}
         </span>
-        <span className="mt-0.5 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+        <span
+          className="font-semibold tracking-wide text-slate-400 uppercase"
+          style={{ fontSize: Math.max(9, size * 0.068) }}
+        >
           {label}
         </span>
       </div>

@@ -14,12 +14,19 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 
+/* On wider screens the app renders as a framed phone-width column. */
+@media (min-width: 640px) {
+  body {
+    @apply bg-slate-200/70;
+  }
+}
+
 @utility card {
   @apply rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-900/5;
 }
 
 @utility btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 active:scale-[0.98] disabled:opacity-40;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none;
 }
 
 @utility btn-secondary {

@@ -72,7 +72,7 @@ export function Dashboard() {
   return (
     <div className="space-y-4">
       {/* Health score */}
-      <section className="card flex items-center gap-5">
+      <section className="card flex items-center gap-4">
         <HealthRing score={latest.health_score} />
         <div className="min-w-0 flex-1">
           <p className="text-xs text-slate-400">Last tested {formatDateLong(latest.date)}</p>
@@ -90,18 +90,21 @@ export function Dashboard() {
       </section>
 
       {/* Skipped-treatment callouts */}
-      {callouts?.map((c) => (
-        <div
-          key={c.param}
-          className="flex items-start gap-3 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200"
-        >
-          <AlertIcon className="mt-0.5 h-5 w-5 shrink-0 text-amber-500" />
-          <p className="text-sm text-amber-800">
-            <span className="font-semibold">{c.label} still needs attention</span> — the matching
-            treatment was skipped last week.
-          </p>
+      {callouts && callouts.length > 0 && (
+        <div className="rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+          <div className="flex items-center gap-2">
+            <AlertIcon className="h-4 w-4 shrink-0 text-amber-500" />
+            <h2 className="text-sm font-semibold text-amber-900">Skipped last week</h2>
+          </div>
+          <ul className="mt-1.5 space-y-1 pl-6">
+            {callouts.map((c) => (
+              <li key={c.param} className="text-sm text-amber-800">
+                {c.label} is still out of range — its treatment was skipped.
+              </li>
+            ))}
+          </ul>
         </div>
-      ))}
+      )}
 
       {/* Checklist progress */}
       <section className="card">
@@ -141,13 +144,13 @@ export function Dashboard() {
         <div className="mt-3 grid grid-cols-3 gap-3">
           {SPARK_PARAMS.map(({ key, label, color, format }) => (
             <div key={key} className="rounded-xl bg-slate-50 p-3">
-              <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+              <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
                 {label}
               </p>
-              <p className="mt-0.5 text-lg font-bold text-slate-900 tabular-nums">
+              <p className="mt-0.5 mb-1.5 text-lg font-bold text-slate-900 tabular-nums">
                 {format(latest[key])}
               </p>
-              <Sparkline values={sparkValues.map((r) => r[key])} width={80} height={26} stroke={color} />
+              <Sparkline values={sparkValues.map((r) => r[key])} height={24} stroke={color} />
             </div>
           ))}
         </div>
