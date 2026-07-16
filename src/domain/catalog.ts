@@ -28,7 +28,8 @@ export interface CatalogProduct {
 export const CATALOG: CatalogProduct[] = [
   { id: 'chlorine_tabs', name: 'Chlorine Tabs 3"', category: 'Sanitizer', unit: 'tabs', packageSize: 50, packageUnit: '25 lb bucket', estPrice: 89.99 },
   { id: 'liquid_chlorine', name: 'Liquid Chlorine 12.5%', category: 'Sanitizer', unit: 'fl oz', packageSize: 128, packageUnit: '1 gal jug', estPrice: 8.99 },
-  { id: 'cal_hypo_shock', name: 'Cal-Hypo Shock 65%', category: 'Shock', unit: 'oz', packageSize: 16, packageUnit: '1 lb bag', estPrice: 6.49 },
+  // Priced from a real Leslie's receipt (Power Powder Plus, 1 lb): $8.99 ea, $6.99 at 12+
+  { id: 'cal_hypo_shock', name: 'Cal-Hypo Shock 65%', category: 'Shock', unit: 'oz', packageSize: 16, packageUnit: '1 lb bag', estPrice: 8.99 },
   { id: 'dichlor_shock', name: 'Dichlor Shock 56%', category: 'Shock', unit: 'oz', packageSize: 16, packageUnit: '1 lb bag', estPrice: 7.99 },
   { id: 'muriatic_acid', name: 'Muriatic Acid 31.45%', category: 'Balancer', unit: 'fl oz', packageSize: 128, packageUnit: '1 gal jug', estPrice: 12.99 },
   { id: 'soda_ash', name: 'Soda Ash (pH Up)', category: 'Balancer', unit: 'oz', packageSize: 96, packageUnit: '6 lb tub', estPrice: 16.99 },
@@ -38,7 +39,8 @@ export const CATALOG: CatalogProduct[] = [
   { id: 'cya_stabilizer', name: 'CYA Stabilizer', category: 'Balancer', unit: 'oz', packageSize: 64, packageUnit: '4 lb tub', estPrice: 19.99 },
   { id: 'algaecide', name: 'Algaecide 60%', category: 'Algae & Clarity', unit: 'fl oz', packageSize: 32, packageUnit: '1 qt bottle', estPrice: 17.99 },
   { id: 'clarifier', name: 'Water Clarifier', category: 'Algae & Clarity', unit: 'fl oz', packageSize: 32, packageUnit: '1 qt bottle', estPrice: 12.49 },
-  { id: 'phosphate_remover', name: 'Phosphate Remover', category: 'Algae & Clarity', unit: 'fl oz', packageSize: 32, packageUnit: '1 qt bottle', estPrice: 27.99 },
+  // Priced from a real Leslie's receipt (No Phos, 3 L jug ≈ 101 fl oz): $39.99, $34.99 at 2+
+  { id: 'phosphate_remover', name: 'Phosphate Remover', category: 'Algae & Clarity', unit: 'fl oz', packageSize: 101, packageUnit: '3 L jug', estPrice: 39.99 },
   { id: 'de_powder', name: 'DE Powder', category: 'Filter & Equipment', unit: 'lb', packageSize: 24, packageUnit: '24 lb box', estPrice: 32.99 },
   { id: 'filter_cartridge', name: 'Filter Cartridge', category: 'Filter & Equipment', unit: 'each', packageSize: 1, packageUnit: 'cartridge', estPrice: 44.99 },
   { id: 'pool_salt', name: 'Pool Salt', category: 'Salt', unit: 'lb', packageSize: 40, packageUnit: '40 lb bag', estPrice: 11.99 },

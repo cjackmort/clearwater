@@ -47,7 +47,8 @@ export const IDEAL: Record<string, Range> = {
   phosphates: { min: 0, max: 100 },
   /** combined chloramines = TC − FC */
   cc: { min: 0, max: 0.2 },
-  salt: { min: 2700, max: 3400 },
+  /** Matches the range printed on Leslie's AccuBlue reports for salt pools */
+  salt: { min: 3000, max: 4500 },
 }
 
 /** Dosing targets aim for the middle of the ideal range. */
@@ -57,7 +58,7 @@ export const TARGET = {
   ta: 100,
   ch: 300,
   cya: 40,
-  salt: 3200,
+  salt: 3400,
 } as const
 
 export const PARAM_LABELS: Record<string, string> = {
