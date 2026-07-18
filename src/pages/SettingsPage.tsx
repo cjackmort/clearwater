@@ -5,6 +5,7 @@ import { repos } from '../data/repositories'
 import { useActivePool } from '../lib/hooks'
 import { useAppStore } from '../store/useAppStore'
 import { clearAllData, loadDemoData } from '../data/seed'
+import { getApiKey, setApiKey } from '../lib/apiKey'
 import { CameraIcon } from '../components/Icons'
 
 export function SettingsPage() {
@@ -18,6 +19,7 @@ export function SettingsPage() {
   const [busy, setBusy] = useState(false)
   const [confirmReset, setConfirmReset] = useState(false)
   const [notice, setNotice] = useState('')
+  const [apiKey, setApiKeyValue] = useState(() => getApiKey() ?? '')
 
   if (!pool || pools === undefined) return null
 
@@ -125,6 +127,34 @@ export function SettingsPage() {
       </section>
 
       <section className="card space-y-3">
+        <h2 className="text-sm font-semibold text-slate-900">AI Scanning</h2>
+        <p className="text-sm text-slate-500">
+          Scanning test reports and receipts uses Claude, Anthropic's AI. Get an API key at
+          console.anthropic.com — it's stored only on this device and sent nowhere but Anthropic.
+        </p>
+        <div>
+          <label className="label-base" htmlFor="set-api-key">Anthropic API key</label>
+          <input
+            id="set-api-key"
+            className="input-base"
+            type="password"
+            placeholder="sk-ant-…"
+            value={apiKey}
+            onChange={(e) => setApiKeyValue(e.target.value)}
+          />
+        </div>
+        <button
+          className="btn-primary"
+          onClick={() => {
+            setApiKey(apiKey)
+            setNotice(apiKey.trim() ? 'API key saved.' : 'API key cleared.')
+          }}
+        >
+          Save key
+        </button>
+      </section>
+
+      <section className="card space-y-3">
         <h2 className="text-sm font-semibold text-slate-900">Demo & data</h2>
         <p className="text-sm text-slate-500">
           Load a 15,000-gallon demo pool with 8 weeks of readings (including an algae scare and
@@ -167,12 +197,9 @@ export function SettingsPage() {
 
       <section className="card">
         <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900">
-          <CameraIcon className="h-4 w-4 text-slate-400" /> Coming in Phase 2
+          <CameraIcon className="h-4 w-4 text-slate-400" /> Coming next
         </h2>
         <ul className="list-inside list-disc space-y-1 text-sm text-slate-500">
-          <li>Snap a photo of your store test report — values auto-filled</li>
-          <li>Receipt scanning straight into the ledger</li>
-          <li>Cost prediction from your usage rate</li>
           <li>Cloud sync &amp; multi-device (Supabase)</li>
         </ul>
       </section>

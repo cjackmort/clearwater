@@ -24,7 +24,14 @@ Open Settings → **Load demo data** to fill every screen instantly: a 15,000-ga
 - **Inventory** — pre-loaded 16-product catalog, quantity + estimated % remaining, low-stock badge under 25%
 - **Trends** — per-parameter charts with shaded ideal-range bands, plus the health score trend
 - **Ledger** — purchases with line items, monthly spend bar chart, category breakdown
+- **Report photo scanner** — snap a store water-test report (e.g. Leslie's AccuBlue) and Claude vision extracts every value into the reading form, including the store's recommended products
+- **Receipt scanner** — snap a receipt and the purchase sheet is prefilled with line items, promo discounts folded into effective prices, and the photo stored on the transaction
+- **Cost prediction** — projected next-30-days spend from your actual treatment usage (falls back to purchase history)
 - **PWA** — installable, works offline once loaded
+
+### Enabling AI scanning
+
+Scanning calls the Claude API directly from the browser (there is no ClearWater backend). Get an API key at [console.anthropic.com](https://console.anthropic.com), then paste it in **Settings → AI Scanning**. The key is stored only on your device and sent nowhere except Anthropic.
 
 ## Architecture
 
@@ -42,7 +49,10 @@ src/
     checklist.ts      # Checklist generation + completion side effects
     catalog.ts        # Pre-loaded product catalog with package sizes & prices
   services/
-    scanner.ts        # Phase 2 stubs: report & receipt scanning interfaces
+    scanner.ts        # Claude vision extraction for reports & receipts
+  lib/
+    apiKey.ts         # User's Anthropic key (device-local storage)
+    image.ts          # Photo downscale/compress for API + storage
   store/useAppStore.ts# Zustand — active pool only; data reads use useLiveQuery
   pages/              # One file per screen
   components/         # Layout (bottom tab bar), HealthRing, Sparkline, etc.
@@ -54,12 +64,9 @@ src/
 - **Live queries**: `dexie-react-hooks`' `useLiveQuery` makes every screen react to writes anywhere in the app (checking off a chemical instantly updates the dashboard progress bar and inventory).
 - **Dosing constants** live in one documented file (`src/domain/dosingConstants.ts`) — all amounts are *per 10,000 gallons per step*, sourced from standard industry dosing charts, and easy to tune.
 
-## Phase 2 roadmap
+## Roadmap
 
-- **Report photo scanner** — snap the pool-store test report; Claude vision API extracts structured JSON into a reading (interface ready in `src/services/scanner.ts`)
-- **Receipt scanner** — same pipeline into the ledger (`ReceiptScanner` interface stubbed)
-- **Cost prediction** — forecast spend from chemical usage rate
-- **Supabase swap + auth** — implement the repository interfaces against Postgres; `user_id` columns are already on every table
+- **Supabase swap + auth** — implement the repository interfaces against Postgres; `user_id` columns are already on every table. This is the only remaining Phase 2 item; report scanning, receipt scanning, and cost prediction shipped.
 
 ## Stack
 

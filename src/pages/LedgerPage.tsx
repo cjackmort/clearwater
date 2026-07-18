@@ -1,11 +1,16 @@
-import { useState } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { repos } from '../data/repositories'
 import { useActivePool } from '../lib/hooks'
+import { hasApiKey } from '../lib/apiKey'
+import { prepareImage } from '../lib/image'
+import { receiptScanner, ScanError } from '../services/scanner'
 import { EmptyState } from '../components/EmptyState'
 import { CameraIcon, LedgerIcon, PlusIcon, TrashIcon, XIcon } from '../components/Icons'
 import { categoryForProduct } from '../domain/catalog'
+import { forecastSpend } from '../domain/forecast'
 import { formatDateLong, formatMoney, monthKey, monthLabel } from '../lib/format'
 import {
   LOCAL_USER_ID,
@@ -26,6 +31,10 @@ interface LineDraft {
 
 const BLANK_LINE: LineDraft = { product: '', qty: '1', unit_price: '' }
 
+const NO_KEY_NOTICE = 'Add your Anthropic API key in Settings to enable scanning.'
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+
 export function LedgerPage() {
   const pool = useActivePool()
   const txs = useLiveQuery(async (): Promise<TxWithItems[] | undefined> => {
@@ -36,13 +45,19 @@ export function LedgerPage() {
     )
   }, [pool?.id])
 
+  const treatments = useLiveQuery(() => (pool ? repos.treatments.forPool(pool.id) : []), [pool?.id])
+
   const [adding, setAdding] = useState(false)
   const [store, setStore] = useState('')
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10))
   const [lines, setLines] = useState<LineDraft[]>([{ ...BLANK_LINE }])
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [scanning, setScanning] = useState(false)
+  const [scanNotice, setScanNotice] = useState<string | null>(null)
+  const [receiptDataUrl, setReceiptDataUrl] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  if (!pool || txs === undefined) return null
+  if (!pool || txs === undefined || treatments === undefined) return null
 
   const draftTotal = lines.reduce(
     (sum, l) => sum + (Number(l.qty) || 0) * (Number(l.unit_price) || 0),
@@ -51,6 +66,11 @@ export function LedgerPage() {
   const draftValid =
     store.trim().length > 0 &&
     lines.some((l) => l.product.trim() && Number(l.qty) > 0 && Number(l.unit_price) > 0)
+
+  function closeSheet() {
+    setAdding(false)
+    setReceiptDataUrl(null)
+  }
 
   async function saveTransaction() {
     if (!pool || !draftValid) return
@@ -73,12 +93,57 @@ export function LedgerPage() {
         store: store.trim(),
         date: new Date(`${date}T12:00:00`).toISOString(),
         total: Math.round(items.reduce((s, i) => s + i.qty * i.unit_price, 0) * 100) / 100,
+        ...(receiptDataUrl ? { receipt_photo_url: receiptDataUrl } : {}),
       },
       items,
     )
-    setAdding(false)
+    closeSheet()
     setStore('')
     setLines([{ ...BLANK_LINE }])
+  }
+
+  function handleScanClick() {
+    if (!hasApiKey()) {
+      setScanNotice(NO_KEY_NOTICE)
+      return
+    }
+    setScanNotice(null)
+    fileInputRef.current?.click()
+  }
+
+  async function handleReceiptFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setScanning(true)
+    setScanNotice(null)
+    try {
+      const img = await prepareImage(file)
+      const scan = await receiptScanner.scanReceipt(img.base64, img.mediaType)
+      setStore(scan.store ?? '')
+      setDate(
+        scan.date && ISO_DATE_RE.test(scan.date)
+          ? scan.date
+          : new Date().toISOString().slice(0, 10),
+      )
+      setLines(
+        scan.items.length > 0
+          ? scan.items.map((item) => ({
+              product: item.product,
+              qty: String(item.qty),
+              unit_price: String(
+                Math.round((item.unit_price - (item.discount ?? 0) / (item.qty || 1)) * 100) / 100,
+              ),
+            }))
+          : [{ ...BLANK_LINE }],
+      )
+      setReceiptDataUrl(img.dataUrl)
+      setAdding(true)
+    } catch (err) {
+      setScanNotice(err instanceof ScanError ? err.message : 'Scan failed — try again.')
+    } finally {
+      setScanning(false)
+    }
   }
 
   // Monthly totals for the last 6 months (including empty months).
@@ -106,6 +171,10 @@ export function LedgerPage() {
   const categoryMax = categories[0]?.[1] ?? 1
   const allTimeTotal = txs.reduce((s, t) => s + t.total, 0)
   const thisMonth = months[months.length - 1].total
+  const forecast = forecastSpend(
+    txs.map(({ items: _items, ...tx }) => tx),
+    treatments,
+  )
 
   return (
     <div className="space-y-4">
@@ -126,6 +195,21 @@ export function LedgerPage() {
             {formatMoney(allTimeTotal)}
           </p>
         </div>
+        {forecast.basis !== 'none' && (
+          <div className="card col-span-2">
+            <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+              Projected next 30 days
+            </p>
+            <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">
+              {formatMoney(forecast.next30Days)}
+            </p>
+            <p className="text-xs text-slate-400">
+              {forecast.basis === 'usage'
+                ? 'based on your treatment usage'
+                : 'based on recent purchases'}
+            </p>
+          </div>
+        )}
       </div>
 
       {txs.length > 0 && (
@@ -190,13 +274,34 @@ export function LedgerPage() {
           <PlusIcon className="h-4 w-4" /> Add purchase
         </button>
         <button
-          className="btn-secondary flex-1 text-slate-400"
-          disabled
-          title="Coming in Phase 2"
+          className="btn-secondary flex-1"
+          disabled={scanning}
+          onClick={handleScanClick}
         >
-          <CameraIcon className="h-4 w-4" /> Scan receipt · Phase 2
+          <CameraIcon className="h-4 w-4" /> {scanning ? 'Reading receipt…' : 'Scan receipt'}
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => void handleReceiptFile(e)}
+        />
       </div>
+
+      {scanNotice && (
+        <div className="rounded-2xl bg-amber-50 ring-1 ring-amber-200 p-3 text-sm text-amber-800">
+          {scanNotice}
+          {scanNotice === NO_KEY_NOTICE && (
+            <>
+              {' '}
+              <Link to="/settings" className="font-semibold underline">
+                Open Settings →
+              </Link>
+            </>
+          )}
+        </div>
+      )}
 
       {txs.length === 0 ? (
         <EmptyState
@@ -239,6 +344,13 @@ export function LedgerPage() {
                         </li>
                       ))}
                     </ul>
+                    {tx.receipt_photo_url && (
+                      <img
+                        src={tx.receipt_photo_url}
+                        alt="Receipt"
+                        className="mt-3 max-h-44 rounded-xl ring-1 ring-slate-200"
+                      />
+                    )}
                     <button
                       className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-red-500"
                       onClick={() => void repos.transactions.remove(tx.id)}
@@ -262,7 +374,7 @@ export function LedgerPage() {
               <button
                 aria-label="Close"
                 className="rounded-xl p-2 text-slate-400 hover:bg-slate-100"
-                onClick={() => setAdding(false)}
+                onClick={closeSheet}
               >
                 <XIcon className="h-5 w-5" />
               </button>

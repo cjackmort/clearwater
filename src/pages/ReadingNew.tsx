@@ -1,13 +1,16 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useMemo, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { repos } from '../data/repositories'
 import { useActivePool } from '../lib/hooks'
+import { hasApiKey } from '../lib/apiKey'
+import { prepareImage } from '../lib/image'
+import { reportScanner, ScanError } from '../services/scanner'
 import { HealthRing } from '../components/HealthRing'
 import { CameraIcon } from '../components/Icons'
 import { computeHealthScore } from '../domain/healthScore'
 import { computeBuyPlan, computeDosePlan } from '../domain/dosing'
 import { ensureChecklistForReading } from '../domain/checklist'
-import { LOCAL_USER_ID, newId, type Reading } from '../data/types'
+import { LOCAL_USER_ID, newId, type Reading, type RecommendedProduct } from '../data/types'
 
 interface Field {
   key: 'fc' | 'tc' | 'ph' | 'ta' | 'ch' | 'cya' | 'phosphates' | 'salt'
@@ -34,6 +37,14 @@ export function ReadingNew() {
   const pool = useActivePool()
   const [values, setValues] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const [scanError, setScanError] = useState('')
+  const [needsKey, setNeedsKey] = useState(false)
+  const [scanDone, setScanDone] = useState(false)
+  const [scannedPhotoUrl, setScannedPhotoUrl] = useState<string | null>(null)
+  const [scannedProducts, setScannedProducts] = useState<RecommendedProduct[]>([])
+  const [scannedGallons, setScannedGallons] = useState<number | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const fields = useMemo(
     () => (pool?.type === 'saltwater' ? [...FIELDS, SALT_FIELD] : FIELDS),
@@ -71,6 +82,44 @@ export function ReadingNew() {
 
   if (!pool) return null
 
+  const gallonsMismatch =
+    scannedGallons !== null && Math.abs(scannedGallons - pool.gallons) / pool.gallons > 0.1
+
+  function startScan() {
+    if (scanning) return
+    if (!hasApiKey()) {
+      setNeedsKey(true)
+      return
+    }
+    setNeedsKey(false)
+    fileInputRef.current?.click()
+  }
+
+  async function scanFile(file: File) {
+    setScanning(true)
+    setScanError('')
+    setScanDone(false)
+    try {
+      const img = await prepareImage(file)
+      const scan = await reportScanner.scanReport(img.base64, img.mediaType)
+      const filled: Record<string, string> = {}
+      for (const key of ['fc', 'tc', 'ph', 'ta', 'ch', 'cya', 'phosphates', 'salt'] as const) {
+        const value = scan[key]
+        if (value !== undefined) filled[key] = String(value)
+      }
+      setValues((v) => ({ ...v, ...filled }))
+      setScannedPhotoUrl(img.dataUrl)
+      setScannedProducts(scan.recommended_products)
+      setScannedGallons(scan.gallons ?? null)
+      setScanDone(true)
+    } catch (err) {
+      setScanError(err instanceof ScanError ? err.message : 'Scan failed — try again.')
+    } finally {
+      setScanning(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
   async function save() {
     if (!pool || !complete || saving) return
     setSaving(true)
@@ -92,16 +141,23 @@ export function ReadingNew() {
       recommended_products: [],
     }
 
-    // Store the computed buy list on the reading (mirrors what a scanned
-    // store report will provide in Phase 2).
+    if (scannedPhotoUrl) reading.photo_url = scannedPhotoUrl
+
     const inventory = await repos.inventory.forPool(pool.id)
-    const buyPlan = computeBuyPlan(computeDosePlan(reading, pool), inventory)
-    reading.recommended_products = buyPlan.buy.map((b) => ({
-      product: b.productName,
-      quantity: b.packages,
-      unit: b.packageUnit,
-      reason: b.reason,
-    }))
+    if (scannedProducts.length > 0) {
+      // The store's own treatment plan takes priority over our computed list.
+      reading.recommended_products = scannedProducts
+    } else {
+      // Store the computed buy list on the reading (mirrors what a scanned
+      // store report provides).
+      const buyPlan = computeBuyPlan(computeDosePlan(reading, pool), inventory)
+      reading.recommended_products = buyPlan.buy.map((b) => ({
+        product: b.productName,
+        quantity: b.packages,
+        unit: b.packageUnit,
+        reason: b.reason,
+      }))
+    }
 
     await repos.readings.create(reading)
     await ensureChecklistForReading(reading, pool, inventory)
@@ -110,15 +166,53 @@ export function ReadingNew() {
 
   return (
     <div className="space-y-4">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file) void scanFile(file)
+        }}
+      />
       <button
         type="button"
-        disabled
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-200 bg-white px-4 py-3.5 text-sm font-medium text-slate-400"
-        title="Coming in Phase 2"
+        disabled={scanning}
+        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-cyan-300 bg-white px-4 py-3.5 text-sm font-medium text-cyan-700 transition hover:bg-cyan-50 disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-white"
+        onClick={startScan}
       >
         <CameraIcon className="h-5 w-5" />
-        Scan a store test report — coming in Phase 2
+        {scanning ? 'Reading your report…' : 'Scan a store test report'}
       </button>
+
+      {needsKey && (
+        <div className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
+          Add your Anthropic API key in Settings to enable scanning.{' '}
+          <Link to="/settings" className="font-semibold underline">
+            Open Settings →
+          </Link>
+        </div>
+      )}
+
+      {scanError && (
+        <div className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
+          {scanError}
+        </div>
+      )}
+
+      {scanDone && (
+        <p className="text-sm text-emerald-700">
+          Report scanned — review the values below, then save.
+        </p>
+      )}
+
+      {gallonsMismatch && scannedGallons !== null && (
+        <div className="rounded-2xl bg-cyan-50 p-3 text-sm text-cyan-800 ring-1 ring-cyan-200">
+          The report says {scannedGallons.toLocaleString()} gal but your profile says{' '}
+          {pool.gallons.toLocaleString()} gal — dosing uses your profile.
+        </div>
+      )}
 
       <section className="card">
         <h2 className="mb-4 text-sm font-semibold text-slate-900">Test results</h2>
