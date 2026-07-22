@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { repos } from '../data/repositories'
 import { useActivePool } from '../lib/hooks'
 import { EmptyState } from '../components/EmptyState'
+import { Confetti } from '../components/Confetti'
 import { CheckIcon, ChecklistIcon, XIcon } from '../components/Icons'
 import {
   completeChecklistItem,
@@ -93,6 +94,16 @@ export function ChecklistPage() {
     [latest?.id],
   )
 
+  // Fire confetti once, on the transition from incomplete → all-complete.
+  const [celebrate, setCelebrate] = useState(false)
+  const wasAllDone = useRef(true)
+  useEffect(() => {
+    if (!items || items.length === 0) return
+    const allDoneNow = items.every((i) => i.status !== 'pending')
+    if (allDoneNow && !wasAllDone.current) setCelebrate(true)
+    wasAllDone.current = allDoneNow
+  }, [items])
+
   if (!pool || readings === undefined || items === undefined) return null
 
   if (!latest) {
@@ -116,6 +127,7 @@ export function ChecklistPage() {
 
   return (
     <div className="space-y-5">
+      {celebrate && <Confetti onDone={() => setCelebrate(false)} />}
       <section
         className={`relative overflow-hidden rounded-3xl p-5 text-white shadow-lg transition-colors ${
           allDone

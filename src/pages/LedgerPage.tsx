@@ -171,15 +171,14 @@ export function LedgerPage() {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <div className="card">
-          <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-cyan-500 to-sky-600 p-4 text-white shadow-lg shadow-cyan-900/15">
+          <div aria-hidden className="pointer-events-none absolute -top-6 -right-6 h-20 w-20 rounded-full bg-white/10" />
+          <p className="text-[11px] font-semibold tracking-wide text-white/80 uppercase">
             This month
           </p>
-          <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">
-            {formatMoney(thisMonth)}
-          </p>
+          <p className="mt-1 text-2xl font-bold tabular-nums">{formatMoney(thisMonth)}</p>
         </div>
-        <div className="card">
+        <div className="card flex flex-col justify-center">
           <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
             All time
           </p>
@@ -188,18 +187,21 @@ export function LedgerPage() {
           </p>
         </div>
         {forecast.basis !== 'none' && (
-          <div className="card col-span-2">
-            <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
-              Projected next 30 days
-            </p>
-            <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">
-              {formatMoney(forecast.next30Days)}
-            </p>
-            <p className="text-xs text-slate-400">
-              {forecast.basis === 'usage'
-                ? 'based on your treatment usage'
-                : 'based on recent purchases'}
-            </p>
+          <div className="card col-span-2 flex items-center justify-between">
+            <div>
+              <p className="text-[11px] font-semibold tracking-wide text-slate-400 uppercase">
+                Projected next 30 days
+              </p>
+              <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">
+                {formatMoney(forecast.next30Days)}
+              </p>
+              <p className="text-xs text-slate-400">
+                {forecast.basis === 'usage'
+                  ? 'based on your treatment usage'
+                  : 'based on recent purchases'}
+              </p>
+            </div>
+            <span className="chip bg-cyan-50 text-cyan-700">Forecast</span>
           </div>
         )}
       </div>
