@@ -9,7 +9,31 @@ import { CameraIcon } from '../components/Icons'
 import { computeHealthScore } from '../domain/healthScore'
 import { computeBuyPlan, computeDosePlan } from '../domain/dosing'
 import { ensureChecklistForReading } from '../domain/checklist'
+import { IDEAL } from '../domain/dosingConstants'
 import { LOCAL_USER_ID, newId, type Reading, type RecommendedProduct } from '../data/types'
+
+type FieldStatus = 'low' | 'good' | 'high' | null
+
+function fieldStatus(key: string, raw: string): FieldStatus {
+  const range = IDEAL[key]
+  if (!range || raw === '' || raw === undefined) return null
+  const v = Number(raw)
+  if (Number.isNaN(v)) return null
+  if (v < range.min) return 'low'
+  if (v > range.max) return 'high'
+  return 'good'
+}
+
+const STATUS_CHIP: Record<'low' | 'good' | 'high', string> = {
+  good: 'bg-emerald-100 text-emerald-700',
+  low: 'bg-sky-100 text-sky-700',
+  high: 'bg-amber-100 text-amber-700',
+}
+const STATUS_TEXT: Record<'low' | 'good' | 'high', string> = {
+  good: 'Good',
+  low: 'Low ↓',
+  high: 'High ↑',
+}
 
 interface Field {
   key: 'fc' | 'tc' | 'ph' | 'ta' | 'ch' | 'cya' | 'phosphates' | 'salt'
@@ -172,11 +196,20 @@ export function ReadingNew() {
       <button
         type="button"
         disabled={scanning}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-cyan-300 bg-white px-4 py-3.5 text-sm font-medium text-cyan-700 transition hover:bg-cyan-50 disabled:border-slate-200 disabled:text-slate-400 disabled:hover:bg-white"
+        className="group flex w-full items-center gap-3 rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-sky-50 px-4 py-3.5 text-left transition hover:from-cyan-100 hover:to-sky-100 active:scale-[0.99] disabled:opacity-60"
         onClick={startScan}
       >
-        <CameraIcon className="h-5 w-5" />
-        {scanning ? 'Reading your report…' : 'Scan a store test report'}
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 text-white shadow-sm shadow-cyan-500/30">
+          <CameraIcon className="h-5 w-5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-semibold text-cyan-900">
+            {scanning ? 'Reading your report…' : 'Scan a store test report'}
+          </span>
+          <span className="block text-xs text-cyan-700/70">
+            {scanning ? 'Extracting your numbers' : 'Free on-device · auto-fills every field'}
+          </span>
+        </span>
       </button>
 
       {scanError && (
@@ -214,23 +247,38 @@ export function ReadingNew() {
       <section className="card">
         <h2 className="mb-4 text-sm font-semibold text-slate-900">Test results</h2>
         <div className="grid grid-cols-2 gap-3">
-          {fields.map((f) => (
-            <div key={f.key}>
-              <label className="label-base" htmlFor={`reading-${f.key}`}>
-                {f.label} {f.unit && <span className="text-slate-300">({f.unit})</span>}
-              </label>
-              <input
-                id={`reading-${f.key}`}
-                className="input-base tabular-nums"
-                type="number"
-                inputMode="decimal"
-                step={f.step}
-                placeholder={f.placeholder}
-                value={values[f.key] ?? ''}
-                onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
-              />
-            </div>
-          ))}
+          {fields.map((f) => {
+            const status = fieldStatus(f.key, values[f.key] ?? '')
+            return (
+              <div key={f.key}>
+                <div className="mb-1 flex items-center justify-between gap-1">
+                  <label
+                    className="text-xs font-semibold tracking-wide text-slate-500 uppercase"
+                    htmlFor={`reading-${f.key}`}
+                  >
+                    {f.label} {f.unit && <span className="text-slate-300">({f.unit})</span>}
+                  </label>
+                  {status && (
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${STATUS_CHIP[status]}`}
+                    >
+                      {STATUS_TEXT[status]}
+                    </span>
+                  )}
+                </div>
+                <input
+                  id={`reading-${f.key}`}
+                  className="input-base tabular-nums"
+                  type="number"
+                  inputMode="decimal"
+                  step={f.step}
+                  placeholder={f.placeholder}
+                  value={values[f.key] ?? ''}
+                  onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
+                />
+              </div>
+            )
+          })}
         </div>
       </section>
 
