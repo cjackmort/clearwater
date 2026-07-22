@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { repos } from '../data/repositories'
 import { useActivePool } from '../lib/hooks'
 import { HealthRing } from '../components/HealthRing'
+import { WaterBalance } from '../components/WaterBalance'
 import { Sparkline } from '../components/Sparkline'
 import { EmptyState } from '../components/EmptyState'
 import { AlertIcon, DropletIcon, PlusIcon } from '../components/Icons'
@@ -117,6 +118,9 @@ export function Dashboard() {
           </div>
         </div>
       </section>
+
+      {/* Water balance breakdown */}
+      <WaterBalance reading={latest} pool={pool} />
 
       {/* Skipped-treatment callouts */}
       {callouts && callouts.length > 0 && (

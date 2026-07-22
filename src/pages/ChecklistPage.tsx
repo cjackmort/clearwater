@@ -112,24 +112,32 @@ export function ChecklistPage() {
 
   const done = items.filter((i) => i.status !== 'pending').length
   const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0
+  const allDone = items.length > 0 && done === items.length
 
   return (
     <div className="space-y-5">
-      <section className="card">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">
+      <section
+        className={`relative overflow-hidden rounded-3xl p-5 text-white shadow-lg transition-colors ${
+          allDone
+            ? 'bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-900/20'
+            : 'bg-gradient-to-br from-cyan-500 to-sky-600 shadow-cyan-900/20'
+        }`}
+      >
+        <div aria-hidden className="pointer-events-none absolute -top-10 -right-6 h-36 w-36 rounded-full bg-white/10" />
+        <div className="relative flex items-center justify-between">
+          <div className="min-w-0">
+            <h2 className="text-sm font-semibold text-white/90">
               Week of {formatDateLong(latest.date)}
             </h2>
-            <p className="text-xs text-slate-400">
-              Generated from your latest reading · score {latest.health_score}
+            <p className="mt-0.5 text-xs text-white/70">
+              {allDone ? 'All done — nicely balanced! 🎉' : `${done} of ${items.length} tasks complete`}
             </p>
           </div>
-          <span className="text-2xl font-bold text-cyan-700 tabular-nums">{pct}%</span>
+          <span className="text-3xl font-bold tabular-nums">{pct}%</span>
         </div>
-        <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-slate-100">
+        <div className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-white/25">
           <div
-            className="h-full rounded-full bg-cyan-600 transition-all duration-500"
+            className="h-full rounded-full bg-white transition-all duration-700"
             style={{ width: `${pct}%` }}
           />
         </div>

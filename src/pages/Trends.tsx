@@ -1,8 +1,8 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ReferenceArea,
   ResponsiveContainer,
   Tooltip,
@@ -77,10 +77,14 @@ export function Trends() {
         const dataMax = Math.max(...values, range ? Math.min(range.max, 1e6) : -Infinity)
         const pad = (dataMax - dataMin) * 0.15 || 1
 
+        const gradId = `area-${key}`
         return (
           <section key={key} className="card">
             <div className="mb-1 flex items-baseline justify-between">
-              <h2 className="text-sm font-semibold text-slate-900">{label}</h2>
+              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                {label}
+              </h2>
               <span className="text-xs text-slate-400">
                 {range
                   ? range.min === 0
@@ -90,7 +94,13 @@ export function Trends() {
               </span>
             </div>
             <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -14 }}>
+              <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: -14 }}>
+                <defs>
+                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={color} stopOpacity={0.25} />
+                    <stop offset="100%" stopColor={color} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis
                   dataKey="dateLabel"
@@ -129,15 +139,16 @@ export function Trends() {
                     strokeDasharray="4 4"
                   />
                 )}
-                <Line
+                <Area
                   type="monotone"
                   dataKey={key}
                   stroke={color}
                   strokeWidth={2.5}
+                  fill={`url(#${gradId})`}
                   dot={{ r: 3, fill: color, strokeWidth: 0 }}
                   activeDot={{ r: 5 }}
                 />
-              </LineChart>
+              </AreaChart>
             </ResponsiveContainer>
           </section>
         )
