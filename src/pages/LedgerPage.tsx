@@ -1,12 +1,10 @@
 import { useRef, useState, type ChangeEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { repos } from '../data/repositories'
 import { useActivePool } from '../lib/hooks'
-import { hasApiKey } from '../lib/apiKey'
 import { prepareImage } from '../lib/image'
-import { receiptScanner, ScanError } from '../services/scanner'
+import { scanReceipt, ScanError } from '../services/scanner'
 import { EmptyState } from '../components/EmptyState'
 import { CameraIcon, LedgerIcon, PlusIcon, TrashIcon, XIcon } from '../components/Icons'
 import { categoryForProduct } from '../domain/catalog'
@@ -30,8 +28,6 @@ interface LineDraft {
 }
 
 const BLANK_LINE: LineDraft = { product: '', qty: '1', unit_price: '' }
-
-const NO_KEY_NOTICE = 'Add your Anthropic API key in Settings to enable scanning.'
 
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -103,10 +99,6 @@ export function LedgerPage() {
   }
 
   function handleScanClick() {
-    if (!hasApiKey()) {
-      setScanNotice(NO_KEY_NOTICE)
-      return
-    }
     setScanNotice(null)
     fileInputRef.current?.click()
   }
@@ -119,7 +111,7 @@ export function LedgerPage() {
     setScanNotice(null)
     try {
       const img = await prepareImage(file)
-      const scan = await receiptScanner.scanReceipt(img.base64, img.mediaType)
+      const { receipt: scan } = await scanReceipt(img)
       setStore(scan.store ?? '')
       setDate(
         scan.date && ISO_DATE_RE.test(scan.date)
@@ -292,14 +284,6 @@ export function LedgerPage() {
       {scanNotice && (
         <div className="rounded-2xl bg-amber-50 ring-1 ring-amber-200 p-3 text-sm text-amber-800">
           {scanNotice}
-          {scanNotice === NO_KEY_NOTICE && (
-            <>
-              {' '}
-              <Link to="/settings" className="font-semibold underline">
-                Open Settings →
-              </Link>
-            </>
-          )}
         </div>
       )}
 

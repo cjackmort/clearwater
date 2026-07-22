@@ -1,10 +1,9 @@
 import { useMemo, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { repos } from '../data/repositories'
 import { useActivePool } from '../lib/hooks'
-import { hasApiKey } from '../lib/apiKey'
 import { prepareImage } from '../lib/image'
-import { reportScanner, ScanError } from '../services/scanner'
+import { scanReport, ScanError, type ScanMeta } from '../services/scanner'
 import { HealthRing } from '../components/HealthRing'
 import { CameraIcon } from '../components/Icons'
 import { computeHealthScore } from '../domain/healthScore'
@@ -39,8 +38,7 @@ export function ReadingNew() {
   const [saving, setSaving] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [scanError, setScanError] = useState('')
-  const [needsKey, setNeedsKey] = useState(false)
-  const [scanDone, setScanDone] = useState(false)
+  const [scanMeta, setScanMeta] = useState<ScanMeta | null>(null)
   const [scannedPhotoUrl, setScannedPhotoUrl] = useState<string | null>(null)
   const [scannedProducts, setScannedProducts] = useState<RecommendedProduct[]>([])
   const [scannedGallons, setScannedGallons] = useState<number | null>(null)
@@ -87,21 +85,16 @@ export function ReadingNew() {
 
   function startScan() {
     if (scanning) return
-    if (!hasApiKey()) {
-      setNeedsKey(true)
-      return
-    }
-    setNeedsKey(false)
     fileInputRef.current?.click()
   }
 
   async function scanFile(file: File) {
     setScanning(true)
     setScanError('')
-    setScanDone(false)
+    setScanMeta(null)
     try {
       const img = await prepareImage(file)
-      const scan = await reportScanner.scanReport(img.base64, img.mediaType)
+      const { reading: scan, meta } = await scanReport(img)
       const filled: Record<string, string> = {}
       for (const key of ['fc', 'tc', 'ph', 'ta', 'ch', 'cya', 'phosphates', 'salt'] as const) {
         const value = scan[key]
@@ -111,7 +104,7 @@ export function ReadingNew() {
       setScannedPhotoUrl(img.dataUrl)
       setScannedProducts(scan.recommended_products)
       setScannedGallons(scan.gallons ?? null)
-      setScanDone(true)
+      setScanMeta(meta)
     } catch (err) {
       setScanError(err instanceof ScanError ? err.message : 'Scan failed — try again.')
     } finally {
@@ -186,25 +179,29 @@ export function ReadingNew() {
         {scanning ? 'Reading your report…' : 'Scan a store test report'}
       </button>
 
-      {needsKey && (
-        <div className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
-          Add your Anthropic API key in Settings to enable scanning.{' '}
-          <Link to="/settings" className="font-semibold underline">
-            Open Settings →
-          </Link>
-        </div>
-      )}
-
       {scanError && (
         <div className="rounded-2xl bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
           {scanError}
         </div>
       )}
 
-      {scanDone && (
-        <p className="text-sm text-emerald-700">
-          Report scanned — review the values below, then save.
-        </p>
+      {scanMeta && (
+        <div className="rounded-2xl bg-emerald-50 p-3 text-sm text-emerald-700 ring-1 ring-emerald-200">
+          <p>
+            {scanMeta.aiChecked
+              ? 'Scanned on-device and AI-verified'
+              : 'Scanned on-device (free)'}{' '}
+            — review the values below, then save.
+          </p>
+          {scanMeta.corrections.length > 0 && (
+            <p className="mt-1 text-emerald-600">
+              AI corrected: {scanMeta.corrections.join(', ')}.
+            </p>
+          )}
+          {scanMeta.aiError && (
+            <p className="mt-1 text-amber-600">{scanMeta.aiError}</p>
+          )}
+        </div>
       )}
 
       {gallonsMismatch && scannedGallons !== null && (
