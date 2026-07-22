@@ -11,7 +11,7 @@ import { AlertIcon, DropletIcon, PlusIcon } from '../components/Icons'
 import { computeBuyPlan, computeDosePlan } from '../domain/dosing'
 import { scoreBand } from '../domain/healthScore'
 import { ensureChecklistForReading, findSkipCallouts } from '../domain/checklist'
-import { formatDateLong, formatMoney } from '../lib/format'
+import { formatMoney } from '../lib/format'
 
 const SPARK_PARAMS = [
   { key: 'ph' as const, label: 'pH', color: '#8b5cf6', format: (v: number) => v.toFixed(1) },
@@ -85,6 +85,12 @@ export function Dashboard() {
   const sparkValues = readings.slice(-8)
 
   const band = scoreBand(latest.health_score)
+  const daysSinceTest = Math.floor(
+    (Date.now() - new Date(latest.date).getTime()) / 86_400_000,
+  )
+  const testDue = daysSinceTest >= 7
+  const freshness =
+    daysSinceTest <= 0 ? 'today' : daysSinceTest === 1 ? 'yesterday' : `${daysSinceTest} days ago`
   const statusMsg =
     latest.health_score >= 85
       ? 'Your water is in great shape. Keep up the routine.'
@@ -106,9 +112,16 @@ export function Dashboard() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium text-white/80">{greeting()}</p>
             <p className="mt-0.5 text-[13px] leading-snug text-white/90">{statusMsg}</p>
-            <p className="mt-1.5 text-[11px] text-white/70">
-              Last tested {formatDateLong(latest.date)}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-medium text-white/90 backdrop-blur-sm">
+                Tested {freshness}
+              </span>
+              {testDue && (
+                <span className="rounded-full bg-white/90 px-2 py-0.5 text-[11px] font-bold text-slate-800">
+                  Test due
+                </span>
+              )}
+            </div>
             <Link
               to="/reading/new"
               className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3.5 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30 active:scale-[0.98]"

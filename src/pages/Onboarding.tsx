@@ -85,28 +85,35 @@ export function Onboarding() {
   }
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-slate-50 px-4 py-8 sm:border-x sm:border-slate-200/80 sm:shadow-xl sm:shadow-slate-300/40">
-      {hasPools && (
-        <Link
-          to="/settings"
-          className="mb-4 self-start text-sm font-medium text-cyan-700 underline-offset-4 hover:underline"
-        >
-          &larr; Back
-        </Link>
-      )}
-      <div className="mb-8 flex flex-col items-center text-center">
-        <span className="mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-cyan-600 text-white shadow-lg shadow-cyan-600/25">
-          <DropletIcon className="h-8 w-8" />
-        </span>
-        <h1 className="text-2xl font-bold text-slate-900">Welcome to ClearWater</h1>
-        <p className="mt-1 max-w-xs text-sm text-slate-500">
-          {vessel === 'hot_tub'
-            ? "Set up your pool or hot tub and we'll turn every water test into a plan."
-            : "Set up your pool profile and we'll turn every water test into a plan."}
-        </p>
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col overflow-hidden bg-white px-4 py-8 sm:border-x sm:border-slate-200/80 sm:shadow-xl sm:shadow-slate-300/40">
+      {/* Aquatic wash behind the welcome header */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-72 bg-gradient-to-b from-cyan-100 via-sky-50 to-transparent"
+      />
+      <div className="relative z-10">
+        {hasPools && (
+          <Link
+            to="/settings"
+            className="mb-4 self-start text-sm font-medium text-cyan-700 underline-offset-4 hover:underline"
+          >
+            &larr; Back
+          </Link>
+        )}
+        <div className="mb-8 flex flex-col items-center text-center">
+          <span className="animate-float mb-3 flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-cyan-400 to-teal-500 text-white shadow-lg shadow-cyan-500/30">
+            <DropletIcon className="h-8 w-8" />
+          </span>
+          <h1 className="text-2xl font-bold text-slate-900">Welcome to ClearWater</h1>
+          <p className="mt-1 max-w-xs text-sm text-slate-500">
+            {vessel === 'hot_tub'
+              ? "Set up your pool or hot tub and we'll turn every water test into a plan."
+              : "Set up your pool profile and we'll turn every water test into a plan."}
+          </p>
+        </div>
       </div>
 
-      <div className="card space-y-5">
+      <div className="card relative z-10 space-y-5">
         <div>
           <label className="label-base" htmlFor="pool-name">Pool name</label>
           <input
@@ -229,7 +236,7 @@ export function Onboarding() {
       </div>
 
       <button
-        className="mt-4 text-sm font-medium text-cyan-700 underline-offset-4 hover:underline disabled:opacity-40"
+        className="relative z-10 mt-4 text-sm font-medium text-cyan-700 underline-offset-4 hover:underline disabled:opacity-40"
         disabled={saving}
         onClick={demoInstead}
       >
