@@ -4,6 +4,37 @@
   --font-sans:
     'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
+
+  /* Brand water palette */
+  --color-brand-50: #ecfeff;
+  --color-brand-100: #cffafe;
+  --color-brand-400: #22d3ee;
+  --color-brand-500: #06b6d4;
+  --color-brand-600: #0891b2;
+  --color-brand-700: #0e7490;
+
+  --animate-float: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.06); }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 html {
@@ -14,10 +45,24 @@ body {
   @apply bg-slate-50 text-slate-900 antialiased;
 }
 
-/* On wider screens the app renders as a framed phone-width column. */
+/* On wider screens the app renders as a framed phone-width column floating on
+   a soft aquatic backdrop. */
 @media (min-width: 640px) {
   body {
-    @apply bg-slate-200/70;
+    background:
+      radial-gradient(1100px 600px at 15% -10%, #cffafe 0%, transparent 55%),
+      radial-gradient(900px 600px at 110% 10%, #dbeafe 0%, transparent 50%),
+      #eef2f7;
+    background-attachment: fixed;
+  }
+}
+
+/* Respect reduced-motion for all entrance animations. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
@@ -25,8 +70,17 @@ body {
   @apply rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-900/5;
 }
 
+/* Slightly lifted, interactive card variant. */
+@utility card-raised {
+  @apply rounded-2xl bg-white p-4 shadow-lg shadow-slate-300/40 ring-1 ring-slate-900/5;
+}
+
+@utility rise-in {
+  animation: rise 0.5s ease both;
+}
+
 @utility btn-primary {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700 active:scale-[0.98] disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-cyan-500 to-cyan-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-cyan-600/25 transition hover:from-cyan-500 hover:to-cyan-700 active:scale-[0.98] disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none;
 }
 
 @utility btn-secondary {
@@ -39,4 +93,9 @@ body {
 
 @utility label-base {
   @apply mb-1 block text-xs font-semibold tracking-wide text-slate-500 uppercase;
+}
+
+/* Chip used for status badges. */
+@utility chip {
+  @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
 }

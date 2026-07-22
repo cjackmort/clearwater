@@ -39,12 +39,18 @@ export function Layout() {
   )
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-slate-50 sm:border-x sm:border-slate-200/80 sm:shadow-xl sm:shadow-slate-300/40">
-      <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-slate-50/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur">
+    <div className="relative mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-white sm:border-x sm:border-slate-200/80 sm:shadow-xl sm:shadow-slate-300/40">
+      {/* Soft aquatic wash behind the top of every screen */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-56 bg-gradient-to-b from-cyan-50 via-sky-50/60 to-transparent"
+      />
+
+      <header className="sticky top-0 z-20 border-b border-slate-200/60 bg-white/70 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl">
         <div className="flex h-14 items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-600 text-white">
-              <DropletIcon className="h-4.5 w-4.5" />
+            <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-500 text-white shadow-sm shadow-cyan-500/30">
+              <DropletIcon className="h-5 w-5" />
             </span>
             <div className="leading-tight">
               <h1 className="text-base font-bold text-slate-900">
@@ -70,25 +76,37 @@ export function Layout() {
         </div>
       </header>
 
-      <main className="flex-1 px-4 pt-4 pb-28">
+      <main key={pathname} className="rise-in relative z-10 flex-1 px-4 pt-4 pb-28">
         <Outlet />
       </main>
 
       <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-20">
-        <div className="pointer-events-auto mx-auto flex max-w-lg items-stretch justify-around border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur sm:border-x sm:border-slate-200/80">
+        <div className="pointer-events-auto mx-auto flex max-w-lg items-stretch justify-around border-t border-slate-200/80 bg-white/85 px-1 pt-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] backdrop-blur-xl sm:border-x sm:border-slate-200/80">
           {TABS.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               end={to === '/'}
               className={({ isActive }) =>
-                `flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px] font-medium transition ${
-                  isActive ? 'text-cyan-600' : 'text-slate-400 hover:text-slate-600'
+                `group flex flex-1 flex-col items-center gap-1 py-1 text-[10px] font-semibold transition ${
+                  isActive ? 'text-cyan-700' : 'text-slate-400 hover:text-slate-600'
                 }`
               }
             >
-              <Icon className="h-5 w-5" />
-              {label}
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={`flex h-8 w-12 items-center justify-center rounded-full transition-all duration-300 ${
+                      isActive
+                        ? 'bg-cyan-100/80 text-cyan-700'
+                        : 'text-slate-400 group-hover:bg-slate-100'
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  {label}
+                </>
+              )}
             </NavLink>
           ))}
         </div>

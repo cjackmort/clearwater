@@ -8,6 +8,7 @@ import { Sparkline } from '../components/Sparkline'
 import { EmptyState } from '../components/EmptyState'
 import { AlertIcon, DropletIcon, PlusIcon } from '../components/Icons'
 import { computeBuyPlan, computeDosePlan } from '../domain/dosing'
+import { scoreBand } from '../domain/healthScore'
 import { ensureChecklistForReading, findSkipCallouts } from '../domain/checklist'
 import { formatDateLong, formatMoney } from '../lib/format'
 
@@ -16,6 +17,19 @@ const SPARK_PARAMS = [
   { key: 'fc' as const, label: 'FC ppm', color: '#0891b2', format: (v: number) => v.toFixed(1) },
   { key: 'ta' as const, label: 'TA ppm', color: '#10b981', format: (v: number) => v.toFixed(0) },
 ]
+
+const HERO_GRADIENT: Record<string, string> = {
+  green: 'from-emerald-400 via-teal-500 to-cyan-600',
+  yellow: 'from-amber-400 via-orange-400 to-orange-500',
+  red: 'from-rose-500 via-red-500 to-red-600',
+}
+
+function greeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 18) return 'Good afternoon'
+  return 'Good evening'
+}
 
 export function Dashboard() {
   const pool = useActivePool()
@@ -69,23 +83,38 @@ export function Dashboard() {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0
   const sparkValues = readings.slice(-8)
 
+  const band = scoreBand(latest.health_score)
+  const statusMsg =
+    latest.health_score >= 85
+      ? 'Your water is in great shape. Keep up the routine.'
+      : latest.health_score >= 60
+        ? 'A little off balance — this week’s checklist will bring it back.'
+        : 'Your water needs attention. Work the checklist as soon as you can.'
+
   return (
     <div className="space-y-4">
-      {/* Health score */}
-      <section className="card flex items-center gap-4">
-        <HealthRing score={latest.health_score} />
-        <div className="min-w-0 flex-1">
-          <p className="text-xs text-slate-400">Last tested {formatDateLong(latest.date)}</p>
-          <p className="mt-1 text-sm text-slate-600">
-            {latest.health_score >= 85
-              ? 'Your water is in great shape. Keep up the routine.'
-              : latest.health_score >= 60
-                ? 'A little off balance — this week’s checklist will bring it back.'
-                : 'Your water needs attention. Work the checklist as soon as you can.'}
-          </p>
-          <Link to="/reading/new" className="btn-primary mt-3">
-            <PlusIcon className="h-4 w-4" /> New reading
-          </Link>
+      {/* Health score hero */}
+      <section
+        className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${HERO_GRADIENT[band]} p-5 text-white shadow-lg shadow-cyan-900/20`}
+      >
+        {/* decorative bubbles */}
+        <div aria-hidden className="pointer-events-none absolute -top-10 -right-8 h-40 w-40 rounded-full bg-white/10" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-12 -left-6 h-32 w-32 rounded-full bg-white/10" />
+        <div className="relative flex items-center gap-4">
+          <HealthRing score={latest.health_score} onColor size={118} />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-medium text-white/80">{greeting()}</p>
+            <p className="mt-0.5 text-[13px] leading-snug text-white/90">{statusMsg}</p>
+            <p className="mt-1.5 text-[11px] text-white/70">
+              Last tested {formatDateLong(latest.date)}
+            </p>
+            <Link
+              to="/reading/new"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-white/20 px-3.5 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/30 active:scale-[0.98]"
+            >
+              <PlusIcon className="h-4 w-4" /> New reading
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -143,14 +172,18 @@ export function Dashboard() {
         </div>
         <div className="mt-3 grid grid-cols-3 gap-3">
           {SPARK_PARAMS.map(({ key, label, color, format }) => (
-            <div key={key} className="rounded-xl bg-slate-50 p-3">
-              <p className="text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+            <div
+              key={key}
+              className="rounded-xl bg-gradient-to-b from-slate-50 to-white p-3 ring-1 ring-slate-100"
+            >
+              <p className="flex items-center gap-1 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">
+                <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
                 {label}
               </p>
               <p className="mt-0.5 mb-1.5 text-lg font-bold text-slate-900 tabular-nums">
                 {format(latest[key])}
               </p>
-              <Sparkline values={sparkValues.map((r) => r[key])} height={24} stroke={color} />
+              <Sparkline values={sparkValues.map((r) => r[key])} height={28} stroke={color} />
             </div>
           ))}
         </div>
